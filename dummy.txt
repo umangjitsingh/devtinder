@@ -1,0 +1,14 @@
+
+
+"firstName":"",
+"lastName":"",
+"emailId":"",
+"password":"",
+"age": ,
+"gender":"",
+"photoUrl":"",
+"skills":"",
+"about":""
+
+
+delete user api ch asi params cho id lai a but akshay ne req.body cho
