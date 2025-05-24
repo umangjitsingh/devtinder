@@ -98,11 +98,17 @@ app.patch('/user/:id', async (req, res) => {
 	try {
 		const userId = req.params.id;
 		const {
-			firstName, lastName, password, age, gender, about, skills, photoUrl
+			firstName, lastName, password, age, gender, about, skills, photoUrl,emailId
 		} = req.body;
+		if(emailId){
+			return res.status(400).json({
+				message:"emailId cannot be changed",
+				success:false
+			})
+		}
 		const user = await User.findByIdAndUpdate({_id: userId}, {
 			firstName, lastName, age, gender, password, about, skills, photoUrl
-		}, {returnDocument: 'after'});
+		}, {returnDocument: 'after',runValidators:true});
 		if (!user) {
 			return res.status(400).json({
 				message: "user cannot be updated", success: false
@@ -114,7 +120,8 @@ app.patch('/user/:id', async (req, res) => {
 
 	} catch (e) {
 		return res.status(400).json({
-			message: e.message, success: false
+			message: ` ${e.message}`,
+			success: false
 		})
 	}
 })
