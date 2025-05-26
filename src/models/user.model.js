@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import validator from "validator";
 
 
 const userSchema = new mongoose.Schema({
@@ -20,12 +21,22 @@ const userSchema = new mongoose.Schema({
 		required : true,
 		unique   : true,
 		lowercase: true,
-		trim     : true
-
+		trim     : true,
+		validate(value) {
+			if (!validator.isEmail(value)) {
+				throw new Error("Email is not valid..")
+			}
+		}
 	},
 	password : {
 		type: String,
-		trim: true
+		trim: true,
+		minLength:8,
+		validate(value){
+			if(!validator.isStrongPassword(value,[{minUppercase:1}])){
+				throw new Error("Password is not Strong..")
+			}
+		}
 	},
 	age      : {
 		type: Number,
@@ -34,15 +45,20 @@ const userSchema = new mongoose.Schema({
 	gender   : {
 		type: String,
 		enum: ['male', 'female', 'others'],
-		validate(value){
-			if(!['male', 'female', 'others'].includes(value)){
+		validate(value) {
+			if (!['male', 'female', 'others'].includes(value)) {
 				throw new Error('Gender data is not valid')
 			}
 		}
 	},
 	photoUrl : {
 		type   : String,
-		default: "https://cdn-icons-png.flaticon.com/512/196/196369.png"
+		default: "https://cdn-icons-png.flaticon.com/512/196/196369.png",
+		validate(value) {
+			if (!isUrl(value)) {
+				throw new Error('Photo URL is not valid' ,value)
+			}
+		}
 	},
 	about    : {
 		type   : String,
@@ -50,8 +66,8 @@ const userSchema = new mongoose.Schema({
 	},
 	skills   : {
 		type: [String],
-		validate(value){
-			if(value.length > 7){
+		validate(value) {
+			if (value.length > 7) {
 				console.log(value)
 
 				throw new Error('Only 7 skills allowed')

@@ -97,18 +97,23 @@ app.delete('/user/:id', async (req, res) => {
 app.patch('/user/:id', async (req, res) => {
 	try {
 		const userId = req.params.id;
-		const {
-			firstName, lastName, password, age, gender, about, skills, photoUrl,emailId
-		} = req.body;
-		if(emailId){
+		const data = req.body;
+
+		const ALLOWED_UPDATES_ARRAY=[ "lastName",  "gender", "password", "about", "skills", "photoUrl"];
+
+		const IS_PERMITTED = Object.keys(data).every((k)=>{
+			return ALLOWED_UPDATES_ARRAY.includes(k)
+		})
+
+		if(!IS_PERMITTED){
 			return res.status(400).json({
-				message:"emailId cannot be changed",
+				message:"This field cannot be changed..",
 				success:false
 			})
 		}
-		const user = await User.findByIdAndUpdate({_id: userId}, {
-			firstName, lastName, age, gender, password, about, skills, photoUrl
-		}, {returnDocument: 'after',runValidators:true});
+
+		const user = await User.findByIdAndUpdate({_id: userId}, data
+		, {returnDocument: 'after', runValidators: true});
 		if (!user) {
 			return res.status(400).json({
 				message: "user cannot be updated", success: false
