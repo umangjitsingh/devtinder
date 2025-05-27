@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import connect_db from "./services/DB.js";
 import User from "./models/user.model.js";
+import bcrypt from "bcrypt"
+import {validateLoginData, validateRegisterData} from "./services/validateIncomingData.js";
 
 
 dotenv.config();
@@ -13,11 +15,15 @@ app.use(express.json());
 // Post user
 app.post('/signup', async (req, res) => {
 	try {
+		await validateRegisterData(req.body);
 		const {
 			firstName, lastName, emailId, password, age, gender, about, skills, photoUrl
 		} = req.body;
+
+		const hashPassword = await bcrypt.hash(password, 10);
+
 		const user = new User({
-			firstName, lastName, emailId, password, age, gender, about, skills, photoUrl
+			firstName, lastName, emailId, password: hashPassword, age, gender, about, skills, photoUrl
 		})
 
 		await user.save();
@@ -30,6 +36,41 @@ app.post('/signup', async (req, res) => {
 		})
 	}
 });
+
+
+// Login user
+app.post('/login', async (req, res) => {
+	try {
+		const {emailId, password} = req.body;
+		await validateLoginData(emailId, password);
+
+		const user = await User.findOne({emailId:emailId});
+		console.log(user);
+
+		if (!user) {
+			return res.status(404).json({
+				message: "No user found",
+				success: false
+			})
+		}
+		const isPasswordMatch = await bcrypt.compare(password, user.password);
+		if (isPasswordMatch) {
+			let Lname = user.lastName || "";
+			return res.status(200).json({
+				message:`${user.firstName} ${Lname}, is logged in successfully.. `,
+				success: true,
+				user
+			})
+		}
+	} catch (e) {
+		res.status(400).json({
+			success:false,
+			message:e.message
+		})
+	}
+
+})
+
 
 // Feed API - Get/feed - get all users from db.
 app.get('/feed', async (req, res) => {
@@ -51,11 +92,11 @@ app.get('/feed', async (req, res) => {
 
 });
 
-// Get user by email
+// Get user by firstName
 app.get('/user', async (req, res) => {
 	try {
-		const {emailId} = req.body;
-		const user = await User.findOne({emailId});
+		const {firstName} = req.body;
+		const user = await User.findOne({firstName});
 		if (!user) {
 			res.status(404).json({
 				message: "User not found", success: false
@@ -66,7 +107,7 @@ app.get('/user', async (req, res) => {
 		})
 	} catch (e) {
 		res.status(400).json({
-			message: `Something went wrong :${e}`, success: false
+			message: `Something went wrong :${e.message}`, success: false
 		})
 	}
 
@@ -99,21 +140,21 @@ app.patch('/user/:id', async (req, res) => {
 		const userId = req.params.id;
 		const data = req.body;
 
-		const ALLOWED_UPDATES_ARRAY=[ "lastName",  "gender", "password", "about", "skills", "photoUrl"];
+		const ALLOWED_UPDATES_ARRAY = ["lastName", "gender", "password", "about", "skills", "photoUrl"];
 
-		const IS_PERMITTED = Object.keys(data).every((k)=>{
+		const IS_PERMITTED = Object.keys(data).every((k) => {
 			return ALLOWED_UPDATES_ARRAY.includes(k)
 		})
 
-		if(!IS_PERMITTED){
+		if (!IS_PERMITTED) {
 			return res.status(400).json({
-				message:"This field cannot be changed..",
-				success:false
+				message: "This field cannot be changed..",
+				success: false
 			})
 		}
 
 		const user = await User.findByIdAndUpdate({_id: userId}, data
-		, {returnDocument: 'after', runValidators: true});
+			, {returnDocument: 'after', runValidators: true});
 		if (!user) {
 			return res.status(400).json({
 				message: "user cannot be updated", success: false

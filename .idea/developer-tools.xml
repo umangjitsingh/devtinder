@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="jwt-encoder-decoder" pluginVersion="7.1.0">
+  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="hashing-transformer" pluginVersion="7.1.0">
     <developerToolsConfigurations>
       <developerToolConfiguration developerToolId="jwt-encoder-decoder" id="e1c9065d-965c-4a03-9a3c-9f0f4c366d46" name="Workbench">
         <properties>
@@ -9,5 +9,6 @@
         </properties>
       </developerToolConfiguration>
     </developerToolsConfigurations>
+    <expandedGroupNodeIds />
   </component>
 </project>
