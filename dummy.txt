@@ -11,4 +11,5 @@
 "about":""
 
 
-delete user api ch asi params cho id lai a but akshay ne req.body cho
+delete user api - i used req.params but akshay used req.body cho
+get users akshay used email for search i used first name.
