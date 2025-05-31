@@ -4,6 +4,9 @@ import connect_db from "./services/DB.js";
 import User from "./models/user.model.js";
 import bcrypt from "bcrypt"
 import {validateLoginData, validateRegisterData} from "./services/validateIncomingData.js";
+import cookieParser from 'cookie-parser';
+import {authenticateUser} from "./services/auth(JWT).js";
+import jwt from "jsonwebtoken";
 
 
 dotenv.config();
@@ -11,6 +14,7 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 // Post user
 app.post('/signup', async (req, res) => {
@@ -44,8 +48,8 @@ app.post('/login', async (req, res) => {
 		const {emailId, password} = req.body;
 		await validateLoginData(emailId, password);
 
-		const user = await User.findOne({emailId:emailId});
-		console.log(user);
+		const user = await User.findOne({emailId: emailId});
+
 
 		if (!user) {
 			return res.status(404).json({
@@ -55,19 +59,42 @@ app.post('/login', async (req, res) => {
 		}
 		const isPasswordMatch = await bcrypt.compare(password, user.password);
 		if (isPasswordMatch) {
+
+			const token = await authenticateUser(user._id.toString())
+			res.cookie("token", token)
 			let Lname = user.lastName || "";
 			return res.status(200).json({
-				message:`${user.firstName} ${Lname}, is logged in successfully.. `,
+				message: `${user.firstName} ${Lname}, is logged in successfully.. `,
 				success: true,
 				user
 			})
 		}
 	} catch (e) {
 		res.status(400).json({
-			success:false,
-			message:e.message
+			success: false,
+			message: e.message
 		})
 	}
+
+})
+
+// Profile API - get
+app.get('/profile', async (req, res) => {
+	const {token} = req.cookies;
+
+	const decodeToken = await jwt.verify(token, process.env.JWT_SECRET);
+	const {userId} = decodeToken;
+
+	const user = await User.findOne({_id: userId})
+	if (!user) {
+		res.status(404).json({
+			message: "User not found", success: false
+		})
+	}
+	res.status(200).json({
+		success: true, user,message:`Logged in user is ${user.firstName} ${user.lastName || ""}`
+	})
+
 
 })
 
