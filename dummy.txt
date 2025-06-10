@@ -13,3 +13,12 @@
 
 delete user api - i used req.params but akshay used req.body cho
 get users akshay used email for search i used first name.
+
+
+ const user = await User.findByIdAndUpdate({_id: userId}, data
+			, {returnDocument: 'after', runValidators: true});
+		if (!user) {
+			return res.status(400).json({
+				message: "user cannot be updated", success: false
+			})
+		 }
