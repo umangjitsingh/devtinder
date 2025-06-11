@@ -60,7 +60,7 @@ router.post('/login', async (req, res) => {
 			})
 		}
 	} catch (e) {
-		res.status(400).json({
+		return res.status(400).json({
 			success: false,
 			message: e.message
 		})
@@ -73,11 +73,11 @@ router.get('/profile', userAuth, async (req, res) => {
 
 	try {
 		const user = req.user;
-		res.status(200).json({
+		return res.status(200).json({
 			success: true, user, message: `Logged in user is ${user.firstName} ${user.lastName || ""}`
 		})
 	} catch (e) {
-		res.status(400).json({
+		return res.status(400).json({
 			success: false,
 			message: e.message
 		})
