@@ -183,4 +183,17 @@ router.patch('/user/',userAuth, async (req, res) => {
 	}
 })
 
+// logout
+router.post('/logout',userAuth,async(req,res)=>{
+	const user= req.user;
+	res.cookie("token",null,{
+		expires: new Date(Date.now())
+	});
+	res.status(200).json({
+		success:true,
+		message: `${user.firstName.charAt(0).toUpperCase() + user.firstName
+			.slice(1).toLowerCase()} ${user.lastName}, you are Logged out.`
+	})
+})
+
 export default router;

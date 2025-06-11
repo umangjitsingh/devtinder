@@ -2,7 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import connect_db from "./services/DB.js";
 import cookieParser from 'cookie-parser';
-import router from './routes/user.routes.js'
+import userRoutes from './routes/user.routes.js'
+import connectionRequestRoutes from "./routes/connectionRequest.routes.js";
 
 dotenv.config();
 
@@ -10,6 +11,9 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+
+app.use('/',userRoutes);
+app.use('/',connectionRequestRoutes)
 
 
 connect_db().then(() => {
