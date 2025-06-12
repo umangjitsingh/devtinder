@@ -29,11 +29,11 @@ const userSchema = new mongoose.Schema({
 		}
 	},
 	password : {
-		type: String,
-		trim: true,
-		minLength:8,
-		validate(value){
-			if(!validator.isStrongPassword(value,[{minUppercase:1}])){
+		type     : String,
+		trim     : true,
+		minLength: 8,
+		validate(value) {
+			if (!validator.isStrongPassword(value, [{minUppercase: 1}])) {
 				throw new Error("Password is not Strong..")
 			}
 		}
@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema({
 		default: "https://cdn-icons-png.flaticon.com/512/196/196369.png",
 		validate(value) {
 			if (!validator.isURL(value)) {
-				throw new Error('Photo URL is not valid' ,value)
+				throw new Error('Photo URL is not valid', value)
 			}
 		}
 	},
@@ -75,6 +75,14 @@ const userSchema = new mongoose.Schema({
 		}
 	}
 }, {timestamps: true});
+
+userSchema.pre("save", async function (next) {
+	const user = this;
+	if (user.skills.includes('captain')) {
+		user.firstName = 'CAPTAIN 🏏' + user.firstName;
+	}
+	next();
+})
 
 const User = mongoose.model('User', userSchema);
 export default User;
