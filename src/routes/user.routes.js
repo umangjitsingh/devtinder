@@ -82,15 +82,13 @@ router.get('/profile', userAuth, async (req, res) => {
 			message: e.message
 		})
 	}
-
-
 })
 
 
 // Feed API - Get/feed - get all users from db.
 router.get('/feed', async (req, res) => {
 	try {
-		const users = await User.find({});
+		const users = await User.find({})
 		if (!users) {
 			return res.status(404).json({
 				message: "no users found", success: false

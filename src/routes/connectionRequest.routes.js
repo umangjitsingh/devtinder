@@ -1,6 +1,7 @@
 import express from "express";
 import userAuth from "../middlewares/userAuth(readJWT).js";
 import ConnectionRequest from "../models/connectionRequest.models.js";
+import User from "../models/user.model.js";
 
 
 const router = express.Router();
@@ -29,17 +30,21 @@ router.post('/request/send/:status/:toUserId', userAuth, async (req, res) => {
 			})
 		}
 
-		let request = await ConnectionRequest.findOne({$or:[{fromUserId, toUserId},{fromUserId:toUserId,toUserId: fromUserId}]});
+		let request = await ConnectionRequest.findOne({$or: [{fromUserId, toUserId},
+				{fromUserId: toUserId, toUserId: fromUserId}]})
 		if (request) {
 			return res.status(400).json({
 				message: 'Connection request already exists.',
-				success : false
+				success: false
 			})
 		}
 		request = new ConnectionRequest({fromUserId, toUserId, status})
 		await request.save();
+		await request.populate({ path: 'fromUserId toUserId', select: 'firstName lastname' });
 		return res.status(201).json({
-			message: `${fromUserId} has ${(status ==='like')?'liked' :'passed'} ${toUserId}`
+			message: `${request.fromUserId.firstName} ${request.fromUserId.lastName} has 
+			${(status === 'like') ? 'liked' : 'passed'} ${request.toUserId.firstName} ${request.toUserId.lastName}`
+
 		})
 
 	} catch (e) {
@@ -67,20 +72,64 @@ router.post('/request/review/:status/:fromUserId', userAuth, async (req, res) =>
 				message: 'Nice joke, you cannot send request to yourself.'
 			})
 		}
-		let connection = await ConnectionRequest.findOne({$or: [{fromUserId: fromUserId, toUserId: toUserId, status: 'like'}, {fromUserId: toUserId, toUserId: fromUserId, status: 'like'}]});
-		console.log(connection)
 
-		if (!connection) {
+		const toUser = await User.findById(toUserId).select('firstName lastName');
+		const fromUser = await User.findById(fromUserId).select('firstName lastName');
+
+		if (!toUser || !fromUser) {
+			return res.status(400).json({message: "One or both users not found.", success: false});
+		}
+
+		let connection = await ConnectionRequest.findOne({
+			$or: [{
+				fromUserId: fromUserId, toUserId: toUserId,
+				status    : 'like'
+			},
+				{
+					fromUserId: toUserId, toUserId: fromUserId,
+					status    : 'like'
+				}]
+		});
+		let alreadyAdded = await ConnectionRequest.findOne({
+			$or: [{
+				fromUserId: fromUserId, toUserId: toUserId,
+				status    : 'accepted'
+			},
+				{
+					fromUserId: toUserId, toUserId: fromUserId,
+					status    : 'accepted'
+				}]
+		});
+
+
+		if (alreadyAdded && (status === 'accepted')) {
 			return res.status(400).json({
-				message: 'Connection Request passed',
+				message: `${toUser.firstName} ${toUser.lastName} and ${fromUser.firstName} ${fromUser.lastName} are friends already`
+			})
+		}
+
+		if (alreadyAdded && status === "rejected") {
+			connection.status = "rejected";
+			await connection.save();
+			return res.status(201).json({
+				message: `${toUser.firstName} ${toUser.lastName} rejected ${fromUser.firstName} ${fromUser.lastName}`
+			});
+		}
+
+
+
+		if (!connection && (status === 'pass')) {
+			return res.status(400).json({
+				message: 'Connection Request passed/ignored',
 				success: false
 			})
 		}
-		connection = await new ConnectionRequest({fromUserId, toUserId, status});
-		connection.status=status;
+
+
+		connection.status = status;
 		await connection.save();
 		return res.status(201).json({
-			message: `${toUserId} ${status}ed ${fromUserId} `
+			message: `${toUser.firstName} ${toUser.lastName} ${status}ed ${fromUser.firstName} ${fromUser.lastName} `
 		})
 
 

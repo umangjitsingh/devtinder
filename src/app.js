@@ -4,6 +4,8 @@ import connect_db from "./services/DB.js";
 import cookieParser from 'cookie-parser';
 import userRoutes from './routes/user.routes.js'
 import connectionRequestRoutes from "./routes/connectionRequest.routes.js";
+import userService from "./routes/userService.js";
+import starRoutes from './routes/aggregatePracticeRoutes.js'
 
 dotenv.config();
 
@@ -14,6 +16,8 @@ app.use(cookieParser());
 
 app.use('/',userRoutes);
 app.use('/',connectionRequestRoutes)
+app.use('/',userService)
+app.use('/',starRoutes)
 
 
 connect_db().then(() => {
