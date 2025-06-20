@@ -40,10 +40,9 @@ router.post('/request/send/:status/:toUserId', userAuth, async (req, res) => {
 		}
 		request = new ConnectionRequest({fromUserId, toUserId, status})
 		await request.save();
-		await request.populate({ path: 'fromUserId toUserId', select: 'firstName lastname' });
+		await request.populate({ path: 'fromUserId toUserId', select: 'firstName lastName' });
 		return res.status(201).json({
-			message: `${request.fromUserId.firstName} ${request.fromUserId.lastName} has 
-			${(status === 'like') ? 'liked' : 'passed'} ${request.toUserId.firstName} ${request.toUserId.lastName}`
+			message: `${request.fromUserId.firstName} ${request.fromUserId.lastName} has ${(status === 'like') ? 'liked' : 'passed'} ${request.toUserId.firstName} ${request.toUserId.lastName}`
 
 		})
 
@@ -129,7 +128,7 @@ router.post('/request/review/:status/:fromUserId', userAuth, async (req, res) =>
 		connection.status = status;
 		await connection.save();
 		return res.status(201).json({
-			message: `${toUser.firstName} ${toUser.lastName} ${status}ed ${fromUser.firstName} ${fromUser.lastName} `
+			message: `${toUser.firstName} ${toUser.lastName} ${status} ${fromUser.firstName} ${fromUser.lastName} `
 		})
 
 

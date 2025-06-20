@@ -1,6 +1,7 @@
 import express from "express";
 import userAuth from "../middlewares/userAuth(readJWT).js";
 import ConnectionRequest from "../models/connectionRequest.models.js";
+import User from "../models/user.model.js";
 
 
 const router = express.Router();
@@ -53,8 +54,8 @@ router.get('/user/requests/outgoing', userAuth, async (req, res) => {
 		const recipients = requests.map(r => `${r.toUserId.firstName} ${r.toUserId.lastName}`).join(', ');
 
 		res.status(200).json({
-			data   : requests,
-			message: `You sent requests to: ${recipients}`
+			message: `You sent requests to: ${recipients}`,
+			data   : requests
 		});
 
 
@@ -66,5 +67,42 @@ router.get('/user/requests/outgoing', userAuth, async (req, res) => {
 
 })
 
+// Feed API - what friends are suggested
+router.get('/feed', userAuth, async (req, res) => {
+	try {
+		const page = parseInt(req.query.page) || 1;
+		let limit = parseInt(req.query.limit) || 10;
+		limit = limit > 20 ? 20 : limit;
+
+		const loggedInUserId = req.user._id.toString();
+
+		const connectionRequests = await ConnectionRequest.find({
+			$or: [
+				{toUserId: loggedInUserId},
+				{fromUserId: loggedInUserId}
+			]
+		}).populate("toUserId", ["firstName"])
+			.populate("fromUserId", ["firstName"])
+		const PeopleAddedAlreadyIds = connectionRequests.flatMap(p => [p.fromUserId._id, p.toUserId._id])
+
+		const idsToIgnore = new Set(PeopleAddedAlreadyIds)
+
+
+		const suggestedUsers = await User.find({
+			_id: {$nin: Array.from(idsToIgnore)}
+		}).select("firstName lastName").skip((page - 1) * limit).limit(limit)
+
+		res.status(200).json({
+			message: suggestedUsers,
+			success: true
+		})
+
+	} catch (e) {
+		res.status(400).json({
+			message: 'Error :' + e.message,
+			success: false
+		})
+	}
+})
 
 export default router;

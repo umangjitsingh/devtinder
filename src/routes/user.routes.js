@@ -84,27 +84,6 @@ router.get('/profile', userAuth, async (req, res) => {
 	}
 })
 
-
-// Feed API - Get/feed - get all users from db.
-router.get('/feed', async (req, res) => {
-	try {
-		const users = await User.find({})
-		if (!users) {
-			return res.status(404).json({
-				message: "no users found", success: false
-			})
-		}
-		return res.status(200).json({
-			message: "list of all users", users
-		})
-	} catch (e) {
-		return res.status(400).json({
-			message: `Something went wrong :${e}`, success: false
-		})
-	}
-
-});
-
 // Get user by firstName
 router.get('/user', async (req, res) => {
 	try {
