@@ -90,7 +90,7 @@ router.get('/feed', userAuth, async (req, res) => {
 
 		const suggestedUsers = await User.find({
 			_id: {$nin: Array.from(idsToIgnore)}
-		}).select("firstName lastName").skip((page - 1) * limit).limit(limit)
+		}).select("firstName lastName photoUrl about skills").skip((page - 1) * limit).limit(limit)
 
 		res.status(200).json({
 			message: suggestedUsers,

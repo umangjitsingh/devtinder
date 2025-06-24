@@ -5,7 +5,8 @@ import User from "../models/user.model.js";
 import {authenticateUser} from "../services/auth(JWT).js";
 import userAuth from "../middlewares/userAuth(readJWT).js";
 
-const router=express.Router();
+
+const router = express.Router();
 
 // Post user
 router.post('/signup', async (req, res) => {
@@ -43,11 +44,14 @@ router.post('/login', async (req, res) => {
 
 		if (!user) {
 			return res.status(404).json({
-				message: "No user found",
+				message: "Please check your email and password.",
 				success: false
 			})
 		}
 		const isPasswordMatch = await bcrypt.compare(password, user.password);
+		if(!isPasswordMatch){
+			return res.status(404).json({message: "Please check your email and password."})
+		}
 		if (isPasswordMatch) {
 
 			const token = await authenticateUser(user._id.toString())
@@ -59,6 +63,7 @@ router.post('/login', async (req, res) => {
 				user
 			})
 		}
+
 	} catch (e) {
 		return res.status(400).json({
 			success: false,
@@ -74,7 +79,9 @@ router.get('/profile', userAuth, async (req, res) => {
 	try {
 		const user = req.user;
 		return res.status(200).json({
-			success: true, user, message: `Logged in user is ${user.firstName} ${user.lastName || ""}`
+			success: true,
+			user,
+			message: `Logged in user is ${user.firstName} ${user.lastName || ""}`
 		})
 	} catch (e) {
 		return res.status(400).json({
@@ -127,7 +134,7 @@ router.delete('/user/:id', async (req, res) => {
 })
 
 // update a user
-router.patch('/user/',userAuth, async (req, res) => {
+router.patch('/user/', userAuth, async (req, res) => {
 	try {
 		const user = req.user;
 		const data = req.body;
@@ -161,13 +168,13 @@ router.patch('/user/',userAuth, async (req, res) => {
 })
 
 // logout
-router.post('/logout',userAuth,async(req,res)=>{
-	const user= req.user;
-	res.cookie("token",null,{
+router.post('/logout', userAuth, async (req, res) => {
+	const user = req.user;
+	res.cookie("token", null, {
 		expires: new Date(Date.now())
 	});
 	res.status(200).json({
-		success:true,
+		success: true,
 		message: `${user.firstName.charAt(0).toUpperCase() + user.firstName
 			.slice(1).toLowerCase()} ${user.lastName}, you are Logged out.`
 	})
